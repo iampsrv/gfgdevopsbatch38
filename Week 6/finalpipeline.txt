@@ -1,0 +1,100 @@
+pipeline {
+    agent { label 'slavenode' }
+    environment {
+        DOCKER_IMAGE = "gfgbatch38flaskapp"
+        DOCKER_REGISTRY = "psrv3"  // Replace with your Docker Hub username
+        IMAGE_TAG = "${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
+    }    
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git "https://github.com/iampsrv/cicdprojectb38gfg.git"
+                sh "ls -ltr"
+                echo 'Checkout done successfully'
+            }
+        }
+        stage('Setup') {
+            steps {
+                sh '''
+                    python3 -m venv .venv
+                    . .venv/bin/activate
+                    pip install --upgrade pip
+                    pip install flask pytest
+                '''
+            }
+        }
+        stage('Test') {
+            steps {
+                sh '''
+                    . .venv/bin/activate
+                    pytest
+                '''
+                echo 'Test done successfully'
+            }
+        }
+        stage('Build docker image') {
+            steps {
+                // script {
+                //     // Build the Docker image
+                //     //docker.build("${IMAGE_TAG}")
+                    
+                // }
+                sh 'docker build -t ${IMAGE_TAG} .'
+                echo 'Build docker image done successfully'
+            }
+        }
+        stage('Login to docker hub') {
+            steps {
+                withCredentials([string(credentialsId: 'dockerhubpwd', variable: 'dockerhubpwd')]) {
+                sh 'docker login -u psrv3 -p ${dockerhubpwd}'}
+                echo 'Login successfully'
+            }
+        }        
+        stage('Run docker container') {
+            steps {
+                script {
+                    if (param == 'yes') {
+                        sh 'docker rm -f myflaskcontainer'
+                        sh 'docker run -itd --name myflaskcontainer -p 5000:5000 ${IMAGE_TAG}'
+                        echo 'Publish docker image done successfully'
+                    } else {
+                        echo "Build Stopped"
+                    }
+          }
+        }
+            }
+        stage('Publish docker image') {
+            steps {
+                sh 'docker push ${IMAGE_TAG}'
+                echo 'Publish docker image done successfully'
+            }
+        }
+    }
+    post {
+        always {
+            script {
+                discordSend(
+                    webhookURL: 'https://discord.com/api/webhooks/1203723015855022190/FfYyR8h6ISsZY4fKkYi10Xi-F1kgHFS6Opr5Y4ebY4F76_Bjxp3iF1WV05QBoXRbVX4r',
+                    title: "Job: ${env.JOB_NAME}",
+                    description: "Build #${env.BUILD_NUMBER} finished with status: ${currentBuild.currentResult}",
+                    link: env.BUILD_URL,
+                    result: currentBuild.currentResult
+                )
+            }
+        }
+        success {
+            sh 'docker image prune -af'
+            echo 'Build and Test Stages succeeded!'
+        }
+        failure {
+            echo 'Build or Test failed. Check logs for details.'
+        }
+        unstable {
+            echo 'Build or Test was unstable (e.g., test failures).'
+        }
+        changed {
+            echo 'This will run only if the build status changed from the last build.'
+        }
+    }
+}
