@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myfirstdeployment
+  labels:
+    app: myflaskapp
+spec:
+  template:
+    metadata:
+      name: myfirstpod
+      labels:
+        app: myflaskapp
+    spec:
+      containers:
+      - name: myfirstpod
+        image: psrv3/batch35dhr:2.0.0
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            cpu: 300m
+          requests:
+            cpu: 200m
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: myflaskapp
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: myfirstpodsvc
+spec:
+  selector:
+    app: myflaskapp
+  ports:
+  - name: http
+    protocol: TCP
+    port: 8080
+    targetPort: 8080
+  type: LoadBalancer
+
+# kubectl autoscale deployment myfirstdeployment --cpu-percent=30 --min=1 --max=5
