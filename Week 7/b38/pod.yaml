@@ -1,0 +1,19 @@
+# kubectl run nginx --image=nginx
+
+# apiVersion: v1, app/v1
+# kind: pod/replicaset/deployment
+# metadata: name, namespace, labels(tags)
+# spec: template of container, no of replicas, volume, etc 
+
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    name: myapplication
+  name: myapplication
+  namespace: default
+spec:
+  containers:
+  - image: psrv3/gfgbatch38flaskapp:v1.0.0
+    name: myapp
+  restartPolicy: Always

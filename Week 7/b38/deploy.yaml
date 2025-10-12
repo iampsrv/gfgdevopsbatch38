@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    name: myapp
+  name: myapp
+  namespace: default
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      name: myapp
+  strategy:
+    type: Recreate
+    # rollingUpdate:
+    #   maxSurge: 25%
+    #   maxUnavailable: 25%
+    # type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        name: myapp
+    spec:
+      containers:
+      - image: psrv3/gfgbatch38flaskapp:v1.0.0
+        name: myapp

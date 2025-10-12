@@ -1,0 +1,20 @@
+# namespace for customer A
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    name: myapp
+  name: myapp
+  namespace: customera
+spec:
+  containers:
+  - image: psrv3/gfgbatch38flaskapp:v1.0.0
+    name: myapp
+  restartPolicy: Always
+
+# kubectl config view
+# kubectl config get-contexts
+# kubectl config set-context customera --cluster=minikube --user=minikube --namespace=customera
+# kubectl config use-context customera
+# kubectl config use-context minikube
+# location of kubeconfig: C:\Users\<username>\.kube

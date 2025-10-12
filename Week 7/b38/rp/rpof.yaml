@@ -1,0 +1,14 @@
+# Restart_policy: OnFailure
+apiVersion: v1
+kind: Pod
+metadata:
+  name: rpof-1
+  labels:
+    app: rpof
+spec:
+  containers:
+  - name: busybox-rpof
+    image: busybox
+    imagePullPolicy: IfNotPresent
+    command: [ 'sh', '-c', 'exit 1' ]
+  restartPolicy: OnFailure
