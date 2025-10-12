@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-task
+spec:
+  replicas: {{ .Values.flaskApp.replicaCount }}
+  selector:
+    matchLabels:
+      app: flask-task
+  template:
+    metadata:
+      labels:
+        app: flask-task
+    spec:
+      initContainers:
+      - name: wait-for-postgres
+        image: busybox
+        command: [ 'sh', '-c', 'until nc -z postgres {{ .Values.postgres.containerPort }}; do echo waiting for postgres; sleep 2; done' ]
+      containers:
+      - name: flask
+        image: {{ .Values.flaskApp.image }}
+        imagePullPolicy: IfNotPresent
+        envFrom:
+        - configMapRef:
+            name: {{ .Values.flaskApp.configMapName }}
+        ports:
+        - containerPort: {{ .Values.flaskApp.containerPort }}
+        readinessProbe:
+          httpGet:
+            path: /
+            port: {{ .Values.flaskApp.containerPort }}
+          initialDelaySeconds: 5
+          periodSeconds: 5
