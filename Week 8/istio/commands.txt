@@ -32,8 +32,10 @@ kubectl create -f weather-service.yaml
 
 minikube service flaskapp-ms
 
+gateway(Control external traffic entry)
 kubectl create -f gateway.yml
 kubectl get gateway
+virtual service (routing rules)
 kubectl create -f virtualservice.yaml
 kubectl get virtualservice
 kubectl get svc istio-ingressgateway -n istio-system

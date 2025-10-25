@@ -1,0 +1,11 @@
+Helm done
+Kustomize done
+Ingress done
+Istio
+Taint and Toleration done
+Setup multi node cluster using minikube done
+RBAC and service account
+
+AWS:
+Self managed kubernetes cluster done
+EKS cluster done

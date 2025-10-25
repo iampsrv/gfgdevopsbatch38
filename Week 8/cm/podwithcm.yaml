@@ -16,3 +16,13 @@ spec:
         configMapKeyRef:
           name: my-flask-config
           key: NAME
+    - name: DB_HOST
+      valueFrom:
+        configMapKeyRef:
+          name: my-flask-config
+          key: DB_HOST
+    - name: DB_PORT
+      valueFrom:
+        configMapKeyRef:
+          name: my-flask-config
+          key: DB_PORT

@@ -5,7 +5,7 @@ metadata:
   labels:
     app: infinite-calls
 spec:
-  replicas: 5
+  replicas: 30
   selector:
     matchLabels:
       app: infinite-calls

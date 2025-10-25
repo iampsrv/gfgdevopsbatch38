@@ -42,8 +42,8 @@
 127.0.0.1 support.wondershare.net
 127.0.0.1 www.wondershare.net
 
-172.28.186.73 pranjal-flask-app.example.com
-172.28.186.73 pranjal-flask-newapp.example.com
+172.17.73.119 pranjal-flask-app.example.com
+172.17.73.119 pranjal-flask-newapp.example.com
 127.0.0.1 www.cbs.wondershare.com
 127.0.0.1 cbs.wondershare.com
 127.0.0.1 www.wondershare.com
@@ -57,3 +57,8 @@
 # To allow the same kube context to work on the host and the container:
 127.0.0.1 kubernetes.docker.internal
 # End of section
+
+
+
+
+0.0.0.1	mssplus.mcafee.com

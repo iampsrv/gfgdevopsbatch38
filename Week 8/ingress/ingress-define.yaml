@@ -23,6 +23,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: flaskapp-ms
+            name: my-app
             port:
-              number: 5000
+              number: 80
