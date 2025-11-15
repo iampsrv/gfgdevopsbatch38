@@ -1,0 +1,214 @@
+{
+	"AWSTemplateFormatVersion": "2010-09-09",
+	"Description": "The template used to create an ECS Service from the ECS Console.",
+	"Parameters": {
+		"ECSClusterName": {
+			"Type": "String",
+			"Default": "comfortable-turtle-g13nnw"
+		},
+		"ECSServiceName": {
+			"Type": "String",
+			"Default": "batch35td-service-ivrd3s71"
+		},
+		"SecurityGroupIDs": {
+			"Type": "CommaDelimitedList",
+			"Default": "sg-066178362773f44ae,sg-078e9525b45684489"
+		},
+		"SubnetIDs": {
+			"Type": "CommaDelimitedList",
+			"Default": "subnet-072de9096982a64a7,subnet-0037ea6a1bb241d08,subnet-0d1c10facfa589aa7,subnet-0694e555d4e00c745,subnet-0b81e7dc6023ee381,subnet-02372b0e476a8344d"
+		},
+		"VpcID": {
+			"Type": "String",
+			"Default": "vpc-0bf2ba06ec63abf5f"
+		},
+		"LoadBalancerName": {
+			"Type": "String",
+			"Default": "lbtest"
+		}
+	},
+	"Resources": {
+		"ECSService": {
+			"Type": "AWS::ECS::Service",
+			"Properties": {
+				"Cluster": "comfortable-turtle-g13nnw",
+				"TaskDefinition": "arn:aws:ecs:us-east-1:686766985335:task-definition/batch35td:1",
+				"LaunchType": "FARGATE",
+				"ServiceName": "batch35td-service-ivrd3s71",
+				"SchedulingStrategy": "REPLICA",
+				"DesiredCount": 1,
+				"AvailabilityZoneRebalancing": "DISABLED",
+				"LoadBalancers": [
+					{
+						"ContainerName": "myflaskcontainer",
+						"ContainerPort": 8080,
+						"LoadBalancerName": {
+							"Ref": "AWS::NoValue"
+						},
+						"TargetGroupArn": {
+							"Ref": "TargetGroup"
+						}
+					}
+				],
+				"NetworkConfiguration": {
+					"AwsvpcConfiguration": {
+						"AssignPublicIp": "ENABLED",
+						"SecurityGroups": {
+							"Ref": "SecurityGroupIDs"
+						},
+						"Subnets": {
+							"Ref": "SubnetIDs"
+						}
+					}
+				},
+				"PlatformVersion": "LATEST",
+				"DeploymentConfiguration": {
+					"DeploymentCircuitBreaker": {
+						"Enable": true,
+						"Rollback": true
+					},
+					"Strategy": "ROLLING",
+					"MaximumPercent": 200,
+					"MinimumHealthyPercent": 100
+				},
+				"DeploymentController": {
+					"Type": "ECS"
+				},
+				"ServiceConnectConfiguration": {
+					"Enabled": false
+				},
+				"Tags": [],
+				"EnableECSManagedTags": true
+			},
+			"DependsOn": [
+				"Listener"
+			]
+		},
+		"LoadBalancer": {
+			"Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+			"Properties": {
+				"Type": "application",
+				"Name": "lbtest",
+				"SecurityGroups": {
+					"Ref": "SecurityGroupIDs"
+				},
+				"Subnets": {
+					"Ref": "SubnetIDs"
+				}
+			}
+		},
+		"TargetGroup": {
+			"Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+			"Properties": {
+				"HealthCheckPath": "/",
+				"Name": "mytargetgroup",
+				"Port": "8080",
+				"Protocol": "HTTP",
+				"TargetType": "ip",
+				"HealthCheckProtocol": "HTTP",
+				"VpcId": {
+					"Ref": "VpcID"
+				},
+				"TargetGroupAttributes": [
+					{
+						"Key": "deregistration_delay.timeout_seconds",
+						"Value": "300"
+					}
+				]
+			}
+		},
+		"Listener": {
+			"Type": "AWS::ElasticLoadBalancingV2::Listener",
+			"Properties": {
+				"DefaultActions": [
+					{
+						"Type": "forward",
+						"TargetGroupArn": {
+							"Ref": "TargetGroup"
+						}
+					}
+				],
+				"LoadBalancerArn": {
+					"Ref": "LoadBalancer"
+				},
+				"Port": "8080",
+				"Protocol": "HTTP"
+			}
+		},
+		"AutoScalingTarget": {
+			"Type": "AWS::ApplicationAutoScaling::ScalableTarget",
+			"Properties": {
+				"MaxCapacity": "2",
+				"MinCapacity": "1",
+				"ResourceId": "service/comfortable-turtle-g13nnw/batch35td-service-ivrd3s71",
+				"RoleARN": "arn:aws:iam::686766985335:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService",
+				"ScalableDimension": "ecs:service:DesiredCount",
+				"ServiceNamespace": "ecs"
+			},
+			"DependsOn": [
+				"ECSService"
+			]
+		},
+		"AutoScalingPolicy": {
+			"Type": "AWS::ApplicationAutoScaling::ScalingPolicy",
+			"Properties": {
+				"PolicyName": "mypoicy",
+				"PolicyType": "TargetTrackingScaling",
+				"ResourceId": "service/comfortable-turtle-g13nnw/batch35td-service-ivrd3s71",
+				"ScalingTargetId": {
+					"Ref": "AutoScalingTarget"
+				},
+				"TargetTrackingScalingPolicyConfiguration": {
+					"ScaleInCooldown": "300",
+					"ScaleOutCooldown": "300",
+					"TargetValue": "70",
+					"PredefinedMetricSpecification": {
+						"PredefinedMetricType": "ECSServiceAverageCPUUtilization"
+					}
+				}
+			}
+		}
+	},
+	"Outputs": {
+		"ClusterName": {
+			"Description": "The cluster used to create the service.",
+			"Value": {
+				"Ref": "ECSClusterName"
+			}
+		},
+		"ECSService": {
+			"Description": "The created service.",
+			"Value": {
+				"Ref": "ECSService"
+			}
+		},
+		"LoadBalancer": {
+			"Description": "The created load balancer.",
+			"Value": {
+				"Ref": "LoadBalancer"
+			}
+		},
+		"Listener": {
+			"Description": "The created listener.",
+			"Value": {
+				"Ref": "Listener"
+			}
+		},
+		"TargetGroup": {
+			"Description": "The created target group.",
+			"Value": {
+				"Ref": "TargetGroup"
+			}
+		},
+		"AutoScalingTarget": {
+			"Value": {
+				"Ref": "AutoScalingTarget"
+			}
+		},
+		"AutoScalingPolicy": {
+			"Value": {
+				"Ref": "AutoScalingPolicy"
+			}
+		}
+	}
+}
